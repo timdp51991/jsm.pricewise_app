@@ -1,15 +1,15 @@
-import Product from "@/lib/models/product.model";
-import { connectToDb } from "@/lib/mongoose";
-import { generateEmailBody, sendEmail } from "@/lib/nodemailer";
-import { scrapeAmazonProduct } from "@/lib/scraper";
-import { getAveragePrice, getEmailNotifType, getHighestPrice, getLowestPrice } from "@/lib/utils";
 import { NextResponse } from "next/server";
+import { getAveragePrice, getEmailNotifType, getHighestPrice, getLowestPrice } from "@/lib/utils";
+import { connectToDb } from "@/lib/mongoose";
+import Product from "@/lib/models/product.model";
+import { scrapeAmazonProduct } from "@/lib/scraper";
+import { generateEmailBody, sendEmail } from "@/lib/nodemailer";
 
 export const maxDuration = 10; // 
 export const dynamic = 'force-dynamic';
 export const revalidate = 0;
 
-export async function GET () {
+export async function GET (request: Request) {
     try {
         connectToDb();
 
@@ -19,12 +19,17 @@ export async function GET () {
 
         //1.) scrape latest product details and update db
         const updatedProducts = await Promise.all(products.map(async (currentProduct) => {
+            //scrape product detailsq
             const scrapedProduct = await scrapeAmazonProduct(currentProduct.url);
 
-            if(!scrapedProduct) throw new Error("No Product Found");
+            if(!scrapedProduct) return;
 
-            const updatedPriceHistory = [...currentProduct.priceHistory, 
-                                            { price: scrapedProduct.currentPrice }];
+            const updatedPriceHistory = [
+                ...currentProduct.priceHistory,
+                {
+                  price: scrapedProduct.currentPrice,
+                },
+              ];
 
             const product = {
                 ...scrapedProduct,
@@ -34,6 +39,7 @@ export async function GET () {
                 averagePrice: getAveragePrice(updatedPriceHistory),
             };
 
+            //update product in db
             const updatedProduct = await Product.findOneAndUpdate(
                 { url: product.url },
                 product,
@@ -48,16 +54,18 @@ export async function GET () {
                     url: updatedProduct.url,
                 };
 
+                //generate email body
                 const emailContent = await generateEmailBody(productInfo, emailNotifType);
+                //get array of user emails
                 const userEmails = updatedProduct.users.map((user:any) => user.email);
-
+                //send email notification
                 await sendEmail(emailContent, userEmails);
                 }
 
                 return updatedProduct;
             }));
-            return NextResponse.json({ message: 'OK', date: updatedProducts })    
-    } catch (error) {
-        throw new Error(`Error in GET:${error}`)
+            return NextResponse.json({ message: 'OK', data: updatedProducts })    
+    } catch (error:any) {
+        throw new Error(`Failed to get all products. Error in GET:${error.message}`)
     }
 };
