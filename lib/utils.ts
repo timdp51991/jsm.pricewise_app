@@ -117,8 +117,80 @@ export const formatNumber = (num: number = 0) => {
   });
 };
 
+// extract the product category
+export function extractCategory($: any) {
+  // these are possible elements holding description of the product
+  const selectors = [
+    ".ac-for-text",
+    ".cat-link",
+    
+    // Add more selectors here if needed
+  ];
+
+  for (const selector of selectors) {
+    const elements = $(selector);
+    if (elements.length > 0) {
+      const textContent = elements
+        .map((_: any, element: any) => $(element).text().trim())
+        .get()
+        .join("\n");
+      return textContent;
+    }
+  }
+
+  // If no matching elements were found, return an empty string
+  return "";
+};
 
 
+//extract the product stars
+export function extractStars($: any) {
+  // these are possible elements holding description of the product
+  const selectors = [
+    ".a-size-base a-color-base"
+    
+    // Add more selectors here if needed
+  ];
+
+  for (const selector of selectors) {
+    const elements = $(selector);
+    if (elements.length > 0) {
+      const textContent = elements
+        .map((_: any, element: any) => $(element).text().trim())
+        .get()
+        .join("\n");
+      return textContent;
+    }
+  }
+
+  // If no matching elements were found, return an empty string
+  return "";
+}
+
+//extract the product reviews
+// export function extractReviews($: any) {
+//   // these are possible elements holding description of the product
+//   const selectors = [
+//     "#acrCustomerReviewText",
+//     ".a-size-base .a-color-base"
+    
+//     // Add more selectors here if needed
+//   ];
+
+//   for (const selector of selectors) {
+//     const elements = $(selector);
+//     if (elements.length > 0) {
+//       const textContent = elements
+//         .map((_: any, element: any) => $(element).text().trim())
+//         .get()
+//         .join("\n");
+//       return textContent;
+//     }
+//   }
+
+//   // If no matching elements were found, return an empty string
+//   return "";
+// }
 
 
 

@@ -99,7 +99,7 @@ const ProductDetails = async ({ params: {id} }:Props) => {
                       height={18}
                     />  
                   <p>
-                    {product.stars || '25'}
+                    {product.stars || '4'}
                   </p>
                   </div>
                 
